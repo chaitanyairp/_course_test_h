@@ -1,0 +1,18 @@
+#you can wrap it inside a insert overwrite query
+
+select
+ case 
+  when cdc_codes = 'Insert' then table2s
+  when cdc_codes = 'Update' then table2s
+  when cdc_codes = 'Nochange' then table2s
+  when cdc_codes = 'Delete' then table3s
+ end
+from
+(select
+ case
+   when t2.name = t3.name and t2.salary = t3.salary then 'Nochange'
+   when t2.name = t3.name and t2.salary <> t3.salary then 'Update'
+   when t3.name is null then 'Insert'
+   when t2.name is null then 'Delete'
+ end as cdc_codes, concat(t2.name,',',t2.salary) as table2s, concat(t3.name,',',t3.salary) as table3s
+from scd.table3 t3 full outer join scd_stage.table2 t2 on (t2.name = t3.name)) t;
