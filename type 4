@@ -1,4 +1,6 @@
-tableS
+wiki: https://en.wikipedia.org/wiki/Slowly_changing_dimension
+
+Source tableS:
 
 create table tableSource(
 id int,
@@ -10,7 +12,7 @@ stored as textfile;
 
 
 
-tableT
+target/final tableT:
 
 create external table tableTarget_S(
 id int,
