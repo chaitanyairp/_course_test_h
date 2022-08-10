@@ -1,0 +1,89 @@
+Tables:
+
+create table source(
+id int,
+name string,
+title string
+)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+
+create external table target(
+id int,
+name string,
+title string,
+effdate timestamp,
+active char(1)
+)
+clustered by (id) into 2 buckets
+stored as parquet;
+
+-------------------------------------------------------
+1. Create a temp table
+create temporary table target_temp(
+id int,
+name string,
+title string,
+effdate timestamp,
+active char(1)
+);
+
+
+2. Inserts in Source - new records
+   a. set the current active record to Y
+insert into target_temp
+select s.*, current_timestamp,'Y'
+from source s left join target t on s.id = t.id
+where t.id is null;
+
+3. Updates in source - Update records
+   a. set source new record to Y
+   b. set all the target old record to N
+
+insert into target_temp
+select s.*, current_timestamp, 'Y'
+from source s inner join target t on s.id = t.id;
+
+
+insert into target_temp
+select t.id, t.name, t.title, t.effdate, 'N'
+from source s inner join target t on s.id = t.id;
+
+
+4. No change records in target
+
+insert into target_temp
+select t.*
+from target t left join source s on t.id = s.id
+where s.id is null
+
+
+5. override target table
+
+insert overwrite table target select * from target_temp;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
