@@ -1,0 +1,84 @@
+tableS
+
+create table tableSource(
+id int,
+name string
+)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+
+
+tableT
+
+create external table tableTarget_S(
+id int,
+name string,
+createdDate timestamp,
+endDate timestamp
+)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+
+create external table tableTarget_H(
+id int,
+name string,
+createdDate timestamp,
+endDate timestamp
+)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+
+
+S table: 
+What will you write in temp table?
+1. Insert records that are there in source but not in target - Insert source into temp
+2. Records that are present in target but not in source. These have no changes. - Insert target into temp
+3. Records that are in both source and target. Insert source records into temp
+
+create temporary table table_temp_s like tabletarget_s;
+
+1.  New Inserts - If we have new records in Source add them to target table;
+
+insert into table_temp_s select s.*,current_timestamp, from_unixtime(unix_timestamp('9999-12-31 00:00:00.0'), 'yyyy-MM-dd HH:mm:ss.SSS')
+from tablesource s left join tabletarget_s t on s.id = t.id
+where t.id is null
+
+
+2. Copy records that are already there in target to temp
+
+insert into table_temp_s select t.*
+from tabletarget_s t left join tablesource s on s.id = t.id
+where s.id is null
+
+
+3. Records that are updated in source should be moved to target
+
+insert into table_temp_s select s.*, current_timestamp, from_unixtime(unix_timestamp('9999-12-31 00:00:00.0'), 'yyyy-MM-dd HH:mm:ss.SSS')
+from tablesource s inner join tabletarget_s t on s.id = t.id;
+
+
+
+H table: 
+
+create temporary table table_temp_h like tabletarget_h;
+
+insert into table_temp_h
+ select t.id, t.name, t.createdDate, current_timestamp
+ from tablesource s inner join tabletarget_s t on s.id = t.id;
+
+
+Load into final tables:
+
+insert overwrite table tabletarget_s select * from table_temp_s;
+
+insert overwrite table tabletarget_h select * from table_temp_h;
+
+
+
+
