@@ -1,5 +1,6 @@
 #you can wrap it inside a insert overwrite query
 
+Type - 1: overwrite
 select
  case 
   when cdc_codes = 'Insert' then table2s
